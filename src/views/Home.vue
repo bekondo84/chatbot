@@ -1,0 +1,24 @@
+<template>
+  <main class="main">
+    <nav-bar />
+    <discussion-panel />
+  </main>
+</template>
+<script lang="ts">
+import { Options, Vue } from "vue-class-component";
+import DiscussionPanel from "../components/DiscussionPanel.vue";
+import NavBar from "../components/NavBar.vue";
+import Login from "../views/Login.vue";
+
+@Options({
+
+     components: {
+      DiscussionPanel, NavBar, Login
+     }
+})
+
+export default class Home extends Vue {
+
+}
+</script>
+<style lang="scss"></style>
