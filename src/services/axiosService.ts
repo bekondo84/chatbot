@@ -25,6 +25,15 @@ export default class AxiosService {
         return response;    
     }
 
+    async conversationUuid(connected: boolean) {
+        console.log('connected : '+(connected == false))
+        if (connected === false) {
+            return (await axios.get(urlBuilder(['isis-chatbot', 'api', 'v1','public', 'chat', 'uuid']))).data;
+        } else {
+            return (await axios.get(urlBuilder(['isis-chatbot', 'api', 'v1', 'chat', 'uuid']))).data;
+        }
+    }
+
     async generalSettings() {
         const url = urlBuilder(['isis-chatbot', 'api', 'v1', 'chat', 'settings']);
         //console.log('-------------- '+url)
@@ -41,6 +50,38 @@ export default class AxiosService {
         const url = urlBuilder(['isis-chatbot', 'api', 'v1', 'session']);
         let data = {pk: null, label: value};
         await axios.post(url, data);
+   }
+
+   async deleteSession(id: number) {
+      const url = urlBuilder(['isis-chatbot', 'api', 'v1', 'session', id+'']);
+      await axios.delete(url);
+   }
+
+   async initConversation(session: any, uuid: string, secure: any) {
+        let url = urlBuilder(['isis-chatbot', 'api', 'v1','public','chat', 'init','?']);
+
+        if (secure) {
+            url = urlBuilder(['isis-chatbot', 'api', 'v1','chat', 'init','?']);
+        }
+        if (session != null) {
+            url +="/?session="+session+"&";
+        }
+        url +="uuid="+uuid;
+        return (await axios.get(url)).data;
+   }
+
+   async sendRequest(session: any, uuid: string, text: string, secure: any) {
+        let url = urlBuilder(['isis-chatbot', 'api', 'v1','public','chat','?']);
+
+        if (secure) {
+            url = urlBuilder(['isis-chatbot', 'api', 'v1','chat','?']);
+        }
+        if (session != null) {
+            url +="/?session="+session+"&";
+        }
+        url +="uuid="+uuid+"&text="+text;
+       // console.log("chat url : "+url);
+       return (await axios.post(url)).data;
    }
    
 }

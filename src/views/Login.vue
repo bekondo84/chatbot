@@ -15,13 +15,14 @@
       </div>
       <div class="login-footer">
         <button type="button" @click="login">Login</button>
-        <a href="">Rester déconnnecté</a>
+        <a  @click="unConnected()">Rester déconnnecté</a>
       </div>
     </form>
   </div>
 </template>
 <script lang="ts">
 import AxiosService from "@/services/axiosService";
+import store from "@/store";
 import { Vue, Options } from "vue-class-component";
 
 const axiosService = new AxiosService();
@@ -31,6 +32,8 @@ const axiosService = new AxiosService();
           return {
              username: null,
              password: null,
+             uuid: null,
+             token: null,
              error: null,
              hasError: false
           }
@@ -41,15 +44,23 @@ const axiosService = new AxiosService();
 
               try {
                   let loginInfo = await axiosService.login(credentials);
-                  const session = {lang: loginInfo.lang, username: this.username};
-                  console.log('hola you log successful -----');
-                  this.$emit("successLogin", session);
+                  const session = {lang: loginInfo.lang, username: this.username, token: loginInfo.access_token, uuid: await axiosService.conversationUuid(true)};
+                  store.commit('setSession', session);
+                  localStorage.setItem('isis-chat-bot', JSON.stringify(session))
+                  this.$router.push('/c/'+session.uuid)
+                  //this.$emit("successLogin", session);
               } catch(error) {
                   this.error = error ;
                   this.hasError = true;
                   console.error(error);
               }
-           } 
+           }, async unConnected() {
+                  const session = {lang: navigator.language, username: null, token: null, uuid: await axiosService.conversationUuid(false)};
+                  console.log('Stay unconnected has selected ---- : '+JSON.stringify(session))
+                  store.commit('setSession', session);
+                  localStorage.setItem('isis-chat-bot', JSON.stringify(session))
+                  this.$router.push('/c/'+session.uuid);                  
+          } 
        }
    })
    export default class Login extends Vue {

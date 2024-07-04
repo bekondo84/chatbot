@@ -1,21 +1,23 @@
 <template>
-  <div class="app" v-if="hasSession">
-    <sidebar />
+  <!-- <div class="app" v-if="hasSession">
     <router-view />
   </div>
   <div class="app-login" v-else>
    <Login  @successLogin="successLogin"/>
+  </div> -->
+  <div :class="[applyLoginCss ? 'app-login' : 'app']">
+    <router-view />
   </div>
 </template>
-<script  lang="ts">
+<script   lang="ts">
    import { defineComponent } from "vue";
   import { Options, Vue } from "vue-class-component";
   import Sidebar from "./components/SideBar.vue";
-   import Login from "./views/Login.vue";
-   import AxiosService from "./services/axiosService";
-import store from "./store";
-
-
+  import Login from "./views/Login.vue";
+  import store from "./store";
+import axios from "axios";
+  
+  
    @Options ({
        components: {
          Login, Sidebar
@@ -23,6 +25,7 @@ import store from "./store";
        data: function() {
            return {
                session: null,
+               currentPage: null
            }
        }, methods: {
           successLogin(arg: any) {
@@ -32,9 +35,37 @@ import store from "./store";
        }, computed: {
            hasSession() {
               return this.session != null ;
+           }, applyLoginCss() {
+               return this.currentPage != null && this.currentPage=='login';
            }
        }, async mounted() {
             this.session = store.getters.getSession;
+       }, created() {
+           this.session = store.getters.getSession;
+
+           if (this.session == null) {
+              let localSession = localStorage.getItem('isis-chat-bot');
+
+              if (localSession != null) {
+                this.session = JSON.parse(localSession);
+                store.commit('setSession', this.session);
+              }
+              
+           }
+           if (this.session == null || this.session.token ==null && this.session.username != null) {
+               this.$router.push('/login');
+           } else if (this.session.token != null) {
+               let token = this.session.token;
+               axios.defaults.headers.common['Authorization'] = 'Bearer '+token;
+               this.$router.push('/c/'+this.session.uuid);
+           } else {
+               this.$router.push('/c/'+this.session.uuid);
+           }
+       },watch: {
+          $route (to, from) {
+             //console.log('to : '+JSON.stringify(to)+'   --- from : '+from);
+             this.currentPage = to.name;
+          }
        }
    })
    

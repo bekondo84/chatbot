@@ -26,7 +26,7 @@
         <li class="items" v-for="item in sessions" :key="item.pk">
           <div>
             <span class="items-label">{{ item.label }}</span
-            ><span class="items-icon"><font-awesome-icon icon="fa-solid fa-xmark" /></span>
+            ><span class="items-icon" @click="deleteSession(item.pk)"><font-awesome-icon icon="fa-solid fa-xmark" /></span>
           </div>
         </li>
        </ul>
@@ -37,11 +37,11 @@
       <ul>
         <li class="items">
           <div>
-            <span class="icon"><font-awesome-icon icon="fa-solid fa-screwdriver" /></span><span>{{ keyValue('chat.preference') }}</span>
+            <span class="icon"><font-awesome-icon icon="fa-solid fa-screwdriver" /></span><span class="items-label" @click="preference">{{ keyValue('chat.preference') }}</span>
           </div>          
         </li>
         <li class="items">
-          <div><span class="icon"><font-awesome-icon icon="fa-solid fa-info" /></span><span>{{ keyValue('chatbot.about') }}</span></div>
+          <div><span class="icon"><font-awesome-icon icon="fa-solid fa-info" /></span><span class="items-label" @click="aboutUs">{{ keyValue('chatbot.about') }}</span></div>
         </li>
       </ul>
     </div>
@@ -50,6 +50,7 @@
 <script  lang="ts">
 import AxiosService from "@/services/axiosService";
 import { i18n } from "@/services/i18nService";
+import store from "@/store";
 import { ref } from "vue";
 import { Options, Vue } from "vue-class-component";
 
@@ -69,7 +70,8 @@ const toggleMenu = () => {
            is_expanded: false,
            sessions: [],
            active_session: false,
-           session_value: null
+           session_value: null,
+           desable_session_btn: false,
         }
      }, methods: {
          keyValue(key: string) {
@@ -91,15 +93,38 @@ const toggleMenu = () => {
             this.active_session = false;
             this.session_value = null;
          }, newSession() {
-            this.active_session = true;
-            this.session_value = null;
+             if (this.desable_session_btn) {
+                alert("Cette fonctionnalité n'est disponible qu'en mode connecté")
+             } else {
+                this.active_session = true;
+                this.session_value = null;
+             }
          },async refreshSessionList() {
-             let response = await axiosService.userSessions();
-            this.sessions.splice(0, this.sessions.length);
-            this.sessions.push(...response);   
+             let session = store.getters.getSession;
+             this.desable_session_btn = true;
+             if (session != null && session.token != null) {
+              let response = await axiosService.userSessions();
+              this.sessions.splice(0, this.sessions.length);
+              this.sessions.push(...response);
+              this.desable_session_btn = false;
+             }   
          }, async deleteSession(pk: number) {
+             let message = await this.keyValue('chatSession.delete.warning');
 
+             if (confirm('Are you sure you want to delete ?')) {
+                let response = await axiosService.deleteSession(pk);
+                await this.refreshSessionList();
+                this.cancelSession();
+             }
+         }, preference() {
+              if (this.desable_session_btn) {
+                alert("Cette fonctionnalité n'est disponible qu'en mode connecté");
+              }
+         }, aboutUs() {
+            
          }
+     }, computed: {
+         
      }, async created() {
         this.i18keys = await i18n(['chatbot.mychatsession.name', 'chatbot.settings', 'chatbot.about', 'chat.preference']);
         //Load sess

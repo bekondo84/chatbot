@@ -7,7 +7,7 @@
     <div class="user-menu">
       <span class="user-name">{{ username }}</span>
       <button class="logout-btn" title="Logout">
-        <font-awesome-icon icon="fa-solid fa-right-to-bracket" />
+        <font-awesome-icon :class="[isUserLog ? 'logout-class': 'login-class']" icon="fa-solid fa-right-to-bracket" />
       </button>
     </div>
   </nav>
@@ -25,14 +25,17 @@ const axiosService = new AxiosService();
     return {
        session : null,
        username: null,
-       chatname: null
+       chatname: null,
+       isUserLog: false,
     }
   }, methods: {
       async loadSettings() {
+          this.isUserLog = false ;
           if (this.session != null && this.session.username != null) {
              let response = await axiosService.generalSettings();
              this.username = response.username ;
              this.chatname = response.chatname;
+             this.isUserLog = this.session.token != null ;
           }
       }
   }, async mounted() {
@@ -87,6 +90,13 @@ export default class NavBar extends Vue {
   color: var(--light);
   font-size: 1.5rem;
   background: none;
+
+  .logout-class {
+
+  }
+  .login-class {
+      transform: rotate(-180deg); 
+  }
   &:hover {
     color: var(--primary);
   }

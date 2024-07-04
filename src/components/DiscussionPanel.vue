@@ -2,14 +2,18 @@
   <div class="container">
     <div class="main-content">
       <div class="chat-container">
-        <div class="chat-box">
-          <div class="bot-message-container">
+        <div class="chat-box" v-for="item in conversations" :key="item.pk">
+          <div class="user-message-container" v-if="!hideUserMsge(item)">
+            <span class="message-user">{{ item.input }}</span
+            >
+          </div>
+          <div class="bot-message-container" v-if="!hideBotMsge(item)">
             <div class="message-bot">
               <span class="message-bot-icon"
                 ><font-awesome-icon icon="fa-solid fa-snowflake"
               /></span>
-              <span>Hello! How can I help you today?</span>
-              <div class="message-bot-footer">
+              <span v-html="item.value"></span>
+              <div class="message-bot-footer" v-if="!hideOptions(item)">
                 <span class="message-bot-btn">
                   <button title="copy">
                     <font-awesome-icon icon="fa-solid fa-copy" />
@@ -27,29 +31,75 @@
                 </span>
               </div>
             </div>
-          </div>
-          <div class="user-message-container">
-            <span class="message-user"
-              >Please can you tell me who is the general manager of PAK</span
-            >
-          </div>
+          </div>          
         </div>
-        <div class="input-container">
+      </div>
+      <div class="input-container">
           <div class="user-input">
             <button class="file-button">
               <font-awesome-icon icon="fa-solid fa-paperclip" />
             </button>
-            <textarea placeholder="Type a message..."></textarea>
-            <button class="send-button">
+            <textarea placeholder="Type a message..." v-model="input"></textarea>
+            <button class="send-button"  @click="sendRequest()">
               <font-awesome-icon icon="fa-solid fa-play" />
             </button>
           </div>
         </div>
-      </div>
     </div>
   </div>
 </template>
-<script setup></script>
+<script lang="ts">
+import AxiosService from "@/services/axiosService";
+import store from "@/store";
+import { Options, Vue } from "vue-class-component";
+
+const axiosService = new AxiosService();
+
+@Options({
+   data: function() {
+      return {
+         conversations: [],
+         session: null,
+         current: {pk: null, input: null, value: null},
+         input : null,
+         currentsession: null
+      }
+   }, methods: {
+        hideOptions(item: any) {
+            return item.initial;
+        }, hideUserMsge(item: any) {
+           if (item.initial) return true;
+           return item.input == null ;
+        }, hideBotMsge(item: any) {
+             return item.value == null;
+        },async sendRequest() {
+            let sessionid = null ;
+            let uuid = this.session.uuid;
+            let secure: boolean = this.session.token != null ; 
+            this.current =  {pk: null, input: this.input, value: null};
+            this.conversations.push(this.current, this.session.uuid);
+            if (this.currentsession != null) {
+                sessionid = this.currentsession.pk ;
+            }
+            let data = await axiosService.sendRequest(sessionid, uuid, this.input, secure);
+            Object.assign(this.current, data);
+            this.input = null;
+            this.current = null;
+        }
+   },async mounted() {
+       let sessionid = null;
+       let uuid = this.session.uuid;
+       let secure: boolean = this.session.token != null ; 
+       let data = await axiosService.initConversation(null, uuid, secure);
+       this.conversations.push(...data);
+   }, created() {
+       this.session = store.getters.getSession;
+   }
+})
+export default class DiscussionPanel extends Vue {
+
+}
+</script>
 <style lang="scss" scoped>
 .container {
   display: flex;
@@ -70,15 +120,20 @@
   display: flex;
   flex-direction: column;
   background: white;
+  div:first-child {
+      //margin: 10px 20px 5px 20px;
+      overflow-y: auto;
+  }
 
   // border: solid 1px red;
 }
 
 .chat-box {
-  padding: 20px;
+  margin: 3px 20px 2px 10px;
   overflow-y: auto;
-  flex-grow: 1;
+  //flex-grow: 1;
 }
+  
 
 .bot-message-container {
   display: flex;
@@ -99,6 +154,8 @@
   background: none;
   align-self: flex-start;
   text-align: justify;
+ // display: flex;
+  word-break: break-all;
 }
 
 .message-bot-icon {
@@ -131,7 +188,7 @@
 
 .input-container {
   display: flex;
-  padding: 10px 50px 10px 70px;
+  //padding: 10px 50px 10px 70px;
   border-top: 1px solid #eee;
   align-items: center;
 }
@@ -149,6 +206,11 @@
   textarea {
     flex: 1;
     border: none;
+    resize: vertical;
+    overflow: auto;
+    font-size: 1.1rem;
+    text-align: justify;
+    font-family: 'Times New Roman', Times, serif;
   }
 }
 
