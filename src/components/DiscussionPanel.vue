@@ -1,31 +1,29 @@
 <template>
   <div class="container">
     <div class="main-content">
-      <div class="chat-container">
-        <div class="chat-box" v-for="item in conversations" :key="item.pk">
+      <div class="chat-container" id="chat-container">
+        <div class="chat-box" v-for="(item, index) in conversations" :key="item.pk">
           <div class="user-message-container" v-if="!hideUserMsge(item)">
-            <span class="message-user">{{ item.input }}</span
-            >
+            <span class="message-user">{{ item.input }}</span>
           </div>
-          <div class="bot-message-container" v-if="!hideBotMsge(item)">
+          <loader v-if="hideBotMsge(item) && !available && isLastItem(index)"/>
+          <div class="bot-message-container" v-if="!hideBotMsge(item)">            
             <div class="message-bot">
-              <span class="message-bot-icon"
-                ><font-awesome-icon icon="fa-solid fa-snowflake"
-              /></span>
-              <span v-html="item.value"></span>
-              <div class="message-bot-footer" v-if="!hideOptions(item)">
+              <span class="message-bot-icon"><font-awesome-icon icon="fa-solid fa-snowflake"/></span>
+              <span class="type-out" v-html="item.value"></span>
+              <div class="message-bot-footer">
                 <span class="message-bot-btn">
                   <button title="copy">
                     <font-awesome-icon icon="fa-solid fa-copy" />
                   </button>
                 </span>
                 <span class="message-bot-btn">
-                  <button title="regenerated">
+                  <button title="regenerated" @click="regenerate(item)">
                     <font-awesome-icon icon="fa-solid fa-arrows-spin" />
                   </button>
                 </span>
-                <span class="message-bot-btn">
-                  <button title="bad anwser">
+                <span :class="[item.review ? 'message-bot-btn' : 'bad-answer']">
+                  <button title="bad anwser" @click="review(item)">
                     <font-awesome-icon icon="fa-solid fa-thumbs-down" />
                   </button>
                 </span>
@@ -40,8 +38,9 @@
               <font-awesome-icon icon="fa-solid fa-paperclip" />
             </button>
             <textarea placeholder="Type a message..." v-model="input"></textarea>
-            <button class="send-button"  @click="sendRequest()">
-              <font-awesome-icon icon="fa-solid fa-play" />
+            <button class="send-button"  @click="sendRequest()" :disabled="!available">
+              <font-awesome-icon icon="fa-solid fa-play" v-if="available"/>
+              <font-awesome-icon icon="fa-solid fa-square" v-else/>
             </button>
           </div>
         </div>
@@ -52,39 +51,80 @@
 import AxiosService from "@/services/axiosService";
 import store from "@/store";
 import { Options, Vue } from "vue-class-component";
+import Loader from "./Loader.vue";
 
 const axiosService = new AxiosService();
 
 @Options({
+   components: {
+      Loader
+   },
    data: function() {
       return {
          conversations: [],
          session: null,
-         current: {pk: null, input: null, value: null},
+         current: {pk: null, input: null, value: null, review: true},
          input : null,
-         currentsession: null
+         currentsession: null,
+         available : true,
+         output : null,
+         delay: 50
       }
    }, methods: {
-        hideOptions(item: any) {
-            return item.initial;
+        showOptions(item: any, index: number) {
+            return !item.initial && this.isLastItem(index);
         }, hideUserMsge(item: any) {
            if (item.initial) return true;
            return item.input == null ;
         }, hideBotMsge(item: any) {
-             return item.value == null;
+             return item.value == null && item.pk == null;
+        }, async regenerate(item: any) {
+            this.input = item.input;
+            await this.sendRequest();
         },async sendRequest() {
+            this.scrollToEnd();
             let sessionid = null ;
             let uuid = this.session.uuid;
             let secure: boolean = this.session.token != null ; 
             this.current =  {pk: null, input: this.input, value: null};
             this.conversations.push(this.current, this.session.uuid);
+            this.available = false;
             if (this.currentsession != null) {
                 sessionid = this.currentsession.pk ;
             }
-            let data = await axiosService.sendRequest(sessionid, uuid, this.input, secure);
+            var data = await axiosService.sendRequest(sessionid, uuid, this.input, secure);
+            this.output = data.value;
+            data.value = "";
+            //await new Promise(r => setTimeout(r, 10000));
             Object.assign(this.current, data);
+            
+            for (let i = 0; i < this.output.length; i++) {
+                await new Promise(r => setTimeout(r, this.delay));
+                this.current.value+= this.output[i];
+            }
             this.input = null;
             this.current = null;
+            this.available = true;
+            this.scrollToEnd();
+        }, isLastItem(index: number) {
+            return (this.conversations.length - 1) == index ;
+        }, async review(item: any) {
+            let secure: boolean = this.session.token != null ; 
+            item.review = !item.review;
+            await axiosService.review(item, secure);
+        }, scrollToEnd() {
+           var objDiv = document.getElementById('chat-container');
+
+           if (objDiv) {
+              objDiv.scrollTop = objDiv?.scrollHeight;
+           }
+           
+        }, startTypingEffect() {
+            
+        }
+   }, computed: {
+        isLast() {
+            return this.conversations.length - 1 ;
         }
    },async mounted() {
        let sessionid = null;
@@ -101,6 +141,14 @@ export default class DiscussionPanel extends Vue {
 }
 </script>
 <style lang="scss" scoped>
+@mixin message-bot-btn() {
+  opacity: 0.3;
+
+  button {
+    padding: 5px;
+  }
+}
+
 .container {
   display: flex;
   flex: 1;
@@ -119,10 +167,12 @@ export default class DiscussionPanel extends Vue {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--white);
+  height: 70vh;
+  overflow-y: auto;
   div:first-child {
       //margin: 10px 20px 5px 20px;
-      overflow-y: auto;
+      //overflow-y: auto;
   }
 
   // border: solid 1px red;
@@ -130,7 +180,7 @@ export default class DiscussionPanel extends Vue {
 
 .chat-box {
   margin: 3px 20px 2px 10px;
-  overflow-y: auto;
+  //overflow-y: auto;
   //flex-grow: 1;
 }
   
@@ -164,17 +214,24 @@ export default class DiscussionPanel extends Vue {
 }
 
 .message-bot-btn {
-  opacity: 0.3;
+  @include message-bot-btn()
+}
 
+.bad-answer {
+  @include message-bot-btn();
+  opacity: 0.7;
   button {
-    padding: 5px;
+    color: var(--danger);
+    opacity: 0.9;
   }
+  
 }
 
 .message-bot-footer {
   margin: 5px 0 0 17px;
   font-size: 0.9rem;
 }
+
 .message-user {
   flex: 1 1 0;
   margin: 0 50px 10px 50px;

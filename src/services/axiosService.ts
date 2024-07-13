@@ -70,6 +70,14 @@ export default class AxiosService {
         return (await axios.get(url)).data;
    }
 
+   async review(data: any, secure: any) {
+        let url = urlBuilder(['isis-chatbot', 'api', 'v1','public','chat','review', data.pk, data.review]);
+
+        if (secure) {
+            url = urlBuilder(['isis-chatbot', 'api', 'v1','chat','review', data.pk, data.review]);
+        }
+        return (await axios.put(url, data)).data;
+   }
    async sendRequest(session: any, uuid: string, text: string, secure: any) {
         let url = urlBuilder(['isis-chatbot', 'api', 'v1','public','chat','?']);
 

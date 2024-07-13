@@ -101,9 +101,11 @@ nav {
   --grey: #64748b;
   --dark: #1e293b;
   --dark-alt: #334155;
+  --dark-bold: #070707;
   --light: #f1f5f9;
   --sidebar-width:200px;
   --danger:#be0707;
+  --white:#fbfbfc;
 }
 
 * {
