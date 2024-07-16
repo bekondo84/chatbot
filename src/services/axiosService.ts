@@ -91,5 +91,8 @@ export default class AxiosService {
        // console.log("chat url : "+url);
        return (await axios.post(url)).data;
    }
-   
+   async title() {
+      let url = urlBuilder(['isis-chatbot', 'api', 'v1','public','commons','title']);
+      return (await axios.get(url)).data;
+   }
 }

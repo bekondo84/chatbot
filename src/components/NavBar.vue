@@ -6,7 +6,7 @@
     </div>
     <div class="user-menu">
       <span class="user-name">{{ username }}</span>
-      <button class="logout-btn" title="Logout">
+      <button class="logout-btn" :title="logMsg()" @click="login()">
         <font-awesome-icon :class="[isUserLog ? 'logout-class': 'login-class']" icon="fa-solid fa-right-to-bracket" />
       </button>
     </div>
@@ -14,6 +14,7 @@
 </template>
 <script lang="ts">
 import AxiosService from "@/services/axiosService";
+import { i18n } from "@/services/i18nService";
 import store from "@/store";
 import { Options, Vue } from "vue-class-component";
 
@@ -27,9 +28,28 @@ const axiosService = new AxiosService();
        username: null,
        chatname: null,
        isUserLog: false,
+       i18keys: []
     }
   }, methods: {
-      async loadSettings() {
+      login() {
+        this.isUserLog = this.session != null && this.session.token != null;
+
+        if (this.isUserLog) {
+            this.session.token = null;
+            this.session.uuid = null;
+            this.session.username= null; 
+        }
+        store.commit('setSession', this.session);
+        this.$router.push('/login');
+      }, logMsg() {
+         let key =  this.isUserLog ? 'chatbot.navbar.logout' : 'chatbot.navbar.login';
+         return this.keyValue(key);
+      }, keyValue(key: string) {
+             if (this.i18keys != null && this.i18keys[key] != null ) {
+                return this.i18keys[key];
+             }
+             return key;
+      }, async loadSettings() {
           this.isUserLog = false ;
           if (this.session != null && this.session.username != null) {
              let response = await axiosService.generalSettings();
@@ -38,9 +58,12 @@ const axiosService = new AxiosService();
              this.isUserLog = this.session.token != null ;
           }
       }
+  }, computed: {
+      
   }, async mounted() {
        this.session = store.getters.getSession;
        await this.loadSettings();
+       this.i18keys = await i18n(['chatbot.navbar.logout', 'chatbot.navbar.login']);
    }
 })
 export default class NavBar extends Vue {

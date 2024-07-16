@@ -38,8 +38,8 @@
               <font-awesome-icon icon="fa-solid fa-paperclip" />
             </button>
             <textarea placeholder="Type a message..." v-model="input"></textarea>
-            <button class="send-button"  @click="sendRequest()" :disabled="!available">
-              <font-awesome-icon icon="fa-solid fa-play" v-if="available"/>
+            <button class="send-button"  @click="sendRequest()" :disabled="progress">
+              <font-awesome-icon icon="fa-solid fa-play" v-if="!progress"/>
               <font-awesome-icon icon="fa-solid fa-square" v-else/>
             </button>
           </div>
@@ -67,6 +67,7 @@ const axiosService = new AxiosService();
          input : null,
          currentsession: null,
          available : true,
+         progress: false,
          output : null,
          delay: 50
       }
@@ -82,6 +83,11 @@ const axiosService = new AxiosService();
             this.input = item.input;
             await this.sendRequest();
         },async sendRequest() {
+           
+           if (this.progress==true || this.input == null) {
+              return 
+           }
+
             this.scrollToEnd();
             let sessionid = null ;
             let uuid = this.session.uuid;
@@ -89,10 +95,13 @@ const axiosService = new AxiosService();
             this.current =  {pk: null, input: this.input, value: null};
             this.conversations.push(this.current, this.session.uuid);
             this.available = false;
+            this.progress = true;
             if (this.currentsession != null) {
                 sessionid = this.currentsession.pk ;
             }
             var data = await axiosService.sendRequest(sessionid, uuid, this.input, secure);
+           
+            this.available = true;
             this.output = data.value;
             data.value = "";
             //await new Promise(r => setTimeout(r, 10000));
@@ -101,11 +110,11 @@ const axiosService = new AxiosService();
             for (let i = 0; i < this.output.length; i++) {
                 await new Promise(r => setTimeout(r, this.delay));
                 this.current.value+= this.output[i];
+                this.scrollToEnd();
             }
             this.input = null;
             this.current = null;
-            this.available = true;
-            this.scrollToEnd();
+            this.progress = false;
         }, isLastItem(index: number) {
             return (this.conversations.length - 1) == index ;
         }, async review(item: any) {
@@ -119,19 +128,27 @@ const axiosService = new AxiosService();
               objDiv.scrollTop = objDiv?.scrollHeight;
            }
            
-        }, startTypingEffect() {
-            
+        },async initComponent() {
+            let sessionid = null;
+            if (this.session != null) {
+              let uuid = this.session.uuid;
+              let secure: boolean = this.session.token != null ; 
+              let data = await axiosService.initConversation(null, uuid, secure);
+              this.conversations.push(...data);
+            }
+            this.scrollToEnd();
         }
    }, computed: {
         isLast() {
             return this.conversations.length - 1 ;
         }
-   },async mounted() {
-       let sessionid = null;
-       let uuid = this.session.uuid;
-       let secure: boolean = this.session.token != null ; 
-       let data = await axiosService.initConversation(null, uuid, secure);
-       this.conversations.push(...data);
+   },watch: {
+         async $route (to, from) {
+             //console.log('to : '+JSON.stringify(to)+'   --- from : '+from);
+             await this.initComponent();
+          }
+     },async mounted() {
+         //await this.initComponent();
    }, created() {
        this.session = store.getters.getSession;
    }

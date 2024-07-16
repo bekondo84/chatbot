@@ -5,8 +5,9 @@
   <div class="app-login" v-else>
    <Login  @successLogin="successLogin"/>
   </div> -->
-  <div :class="[applyLoginCss ? 'app-login' : 'app']">
-    <router-view />
+  <div class="app">
+     <!-- <router-view />  -->
+     <Home />
   </div>
 </template>
 <script   lang="ts">
@@ -15,12 +16,15 @@
   import Sidebar from "./components/SideBar.vue";
   import Login from "./views/Login.vue";
   import store from "./store";
-import axios from "axios";
-  
+  import axios from "axios";
+import AxiosService from "./services/axiosService";
+import Home from "./views/Home.vue";
+   
+  const axiosService = new AxiosService();
   
    @Options ({
        components: {
-         Login, Sidebar
+         Home
        },
        data: function() {
            return {
@@ -40,7 +44,9 @@ import axios from "axios";
            }
        }, async mounted() {
             this.session = store.getters.getSession;
-       }, created() {
+            let title = await axiosService.title();
+            document.title = title;
+       }/** , created() {
            this.session = store.getters.getSession;
 
            if (this.session == null) {
@@ -66,7 +72,7 @@ import axios from "axios";
              //console.log('to : '+JSON.stringify(to)+'   --- from : '+from);
              this.currentPage = to.name;
           }
-       }
+       } */
    })
    
    export default class App extends Vue {

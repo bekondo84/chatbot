@@ -6,7 +6,7 @@
           ><font-awesome-icon icon="fa-solid fa-toggle-off"
         /></span>
       </button>
-      <button class="top-side-btn" @click="newSession()">
+      <button class="top-side-btn" @click="newSession()"  :title="keyValue('chatbot.sidebar.createsession')">
         <span class="material-icons"
           ><font-awesome-icon icon="fa-solid fa-pen-to-square"
         /></span>
@@ -75,7 +75,7 @@ const toggleMenu = () => {
         }
      }, methods: {
          keyValue(key: string) {
-             if (this.i18keys != null) {
+             if (this.i18keys != null && this.i18keys[key] != null) {
                 return this.i18keys[key];
              }
              return key;
@@ -124,9 +124,11 @@ const toggleMenu = () => {
             
          }
      }, computed: {
-         
+         createSessionTitle() {
+            return this.i18keys['chatbot.sidebar.createsession'];
+         }
      }, async created() {
-        this.i18keys = await i18n(['chatbot.mychatsession.name', 'chatbot.settings', 'chatbot.about', 'chat.preference']);
+        this.i18keys = await i18n(['chatbot.mychatsession.name', 'chatbot.settings', 'chatbot.about', 'chat.preference', 'chatbot.sidebar.createsession']);
         //Load sess
         await this.refreshSessionList();
         //console.log('-------------- : '+JSON.parse(response))
