@@ -10,7 +10,7 @@
           <div class="bot-message-container" v-if="!hideBotMsge(item)">            
             <div class="message-bot">
               <span class="message-bot-icon"><font-awesome-icon icon="fa-solid fa-snowflake"/></span>
-              <span class="type-out" v-html="item.value"></span>
+              <span :id="index" class="type-out" v-html="item.value"></span>
               <div class="message-bot-footer">
                 <span class="message-bot-btn">
                   <button title="copy">
@@ -52,6 +52,7 @@ import AxiosService from "@/services/axiosService";
 import store from "@/store";
 import { Options, Vue } from "vue-class-component";
 import Loader from "./Loader.vue";
+import { displayAllImages } from "@/services/utils";
 
 const axiosService = new AxiosService();
 
@@ -112,6 +113,7 @@ const axiosService = new AxiosService();
                 this.current.value+= this.output[i];
                 this.scrollToEnd();
             }
+            //Activate all image
             this.input = null;
             this.current = null;
             this.progress = false;
@@ -223,8 +225,18 @@ export default class DiscussionPanel extends Vue {
   text-align: justify;
  // display: flex;
   word-break: break-all;
+
+  .type-out {
+     
+  }
 }
 
+.hide-image {
+  display: none;
+}
+.show-image {
+  display: block;
+}
 .message-bot-icon {
   margin-right: 10px;
   opacity: 0.5;
