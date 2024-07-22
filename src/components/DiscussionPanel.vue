@@ -52,7 +52,7 @@ import AxiosService from "@/services/axiosService";
 import store from "@/store";
 import { Options, Vue } from "vue-class-component";
 import Loader from "./Loader.vue";
-import { displayAllImages } from "@/services/utils";
+import { displayAllImages, displayImage } from "@/services/utils";
 
 const axiosService = new AxiosService();
 
@@ -148,11 +148,18 @@ const axiosService = new AxiosService();
          async $route (to, from) {
              //console.log('to : '+JSON.stringify(to)+'   --- from : '+from);
              await this.initComponent();
+             displayAllImages();
           }
      },async mounted() {
          //await this.initComponent();
+         
    }, created() {
-       this.session = store.getters.getSession;
+       this.session = store.getters.getSession;       
+   }, updated() {
+       
+    if (!this.progress) {
+        displayAllImages();
+    }
    }
 })
 export default class DiscussionPanel extends Vue {
@@ -225,10 +232,6 @@ export default class DiscussionPanel extends Vue {
   text-align: justify;
  // display: flex;
   word-break: break-all;
-
-  .type-out {
-     
-  }
 }
 
 .hide-image {
