@@ -37,6 +37,11 @@
       <ul>
         <li class="items">
           <div>
+            <span class="icon"><font-awesome-icon icon="fa-solid fa-snowflake" /></span><span class="items-label" @click="$emit('chat-selection')">{{ keyValue('chat.allchats') }}</span>
+          </div>          
+        </li>
+        <li class="items">
+          <div>
             <span class="icon"><font-awesome-icon icon="fa-solid fa-screwdriver" /></span><span class="items-label" @click="preference">{{ keyValue('chat.preference') }}</span>
           </div>          
         </li>
@@ -128,7 +133,7 @@ const toggleMenu = () => {
             return this.i18keys['chatbot.sidebar.createsession'];
          }
      }, async created() {
-        this.i18keys = await i18n(['chatbot.mychatsession.name', 'chatbot.settings', 'chatbot.about', 'chat.preference', 'chatbot.sidebar.createsession']);
+        this.i18keys = await i18n(['chatbot.mychatsession.name', 'chatbot.settings', 'chatbot.about', 'chat.preference', 'chatbot.sidebar.createsession','chat.allchats']);
         //Load sess
         await this.refreshSessionList();
         //console.log('-------------- : '+JSON.parse(response))
@@ -162,7 +167,7 @@ export default class SideBar extends Vue {
   div {
     display: flex;
     flex-flow: row nowrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin: 10px 0 5px 5px;
 
     .items-label {
@@ -187,7 +192,7 @@ export default class SideBar extends Vue {
 }
 
 @mixin icon {
-  margin-right: 10px;
+  margin-right: 5px;
 }
 
 @mixin menu {
@@ -239,6 +244,7 @@ aside {
     input {
       width: 165px;
       font-size: 1rem;
+      background-color: var(--light);
     }
   }
   .setting {

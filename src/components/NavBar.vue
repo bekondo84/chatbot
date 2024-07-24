@@ -2,9 +2,11 @@
   <nav class="navbar">
     <div class="page-title">
       <!-- <button class="toggle-sidebar">&#9776;</button>-->
-      <p>{{ chatname }}</p>
+      <span><p>{{ chatname }} / {{ currentGPT }}</p></span>
     </div>
     <div class="user-menu">
+      <button class="model-btn"  :title="keyValue('chat.allchats')" @click="$emit('chat-selection')"><font-awesome-icon icon="fa-solid fa-snowflake" /></button>
+      <div class="v-separator"></div>
       <span class="user-name">{{ username }}</span>
       <button class="logout-btn" :title="logMsg()" @click="login()">
         <font-awesome-icon :class="[isUserLog ? 'logout-class': 'login-class']" icon="fa-solid fa-right-to-bracket" />
@@ -21,8 +23,9 @@ import { Options, Vue } from "vue-class-component";
 const axiosService = new AxiosService();
 
 @Options({
-   
-  data: function() {
+  props: {
+     chatgpt: Object
+  },data: function() {
     return {
        session : null,
        username: null,
@@ -59,11 +62,13 @@ const axiosService = new AxiosService();
           }
       }
   }, computed: {
-      
+      currentGPT() {
+          return this.chatgpt == null ? "" : this.chatgpt.code;
+      }
   }, async mounted() {
        this.session = store.getters.getSession;
        await this.loadSettings();
-       this.i18keys = await i18n(['chatbot.navbar.logout', 'chatbot.navbar.login']);
+       this.i18keys = await i18n(['chatbot.navbar.logout', 'chatbot.navbar.login','chat.allchats']);
    }
 })
 export default class NavBar extends Vue {
@@ -109,6 +114,19 @@ export default class NavBar extends Vue {
   font-size: small;
 }
 
+.model-btn {
+  color: var(--light);
+  font-size: 1.5rem;
+  background: none;
+  margin-right: 20px;
+  &:hover {
+    color: var(--primary);
+  }
+}
+.v-separator {
+  border-left: 3px solid var(--grey);
+  height: 35px;
+}
 .logout-btn {
   color: var(--light);
   font-size: 1.5rem;

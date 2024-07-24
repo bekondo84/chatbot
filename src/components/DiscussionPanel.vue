@@ -57,7 +57,9 @@ import { displayAllImages, displayImage } from "@/services/utils";
 const axiosService = new AxiosService();
 
 @Options({
-   components: {
+   props: {
+      chatgpt: Object
+   }, components: {
       Loader
    },
    data: function() {
@@ -70,7 +72,8 @@ const axiosService = new AxiosService();
          available : true,
          progress: false,
          output : null,
-         delay: 50
+         delay: 50,
+         chatgpt: null
       }
    }, methods: {
         showOptions(item: any, index: number) {
@@ -100,7 +103,11 @@ const axiosService = new AxiosService();
             if (this.currentsession != null) {
                 sessionid = this.currentsession.pk ;
             }
-            var data = await axiosService.sendRequest(sessionid, uuid, this.input, secure);
+            let domain = null;
+            if (this.chatgpt != null) {
+              domain = this.chatgpt.pk;
+            }
+            var data = await axiosService.sendRequest(sessionid, domain, uuid, this.input, secure);
            
             this.available = true;
             this.output = data.value;
@@ -131,30 +138,40 @@ const axiosService = new AxiosService();
            }
            
         },async initComponent() {
-            let sessionid = null;
+           let sessionid = null;
             if (this.session != null) {
               let uuid = this.session.uuid;
               let secure: boolean = this.session.token != null ; 
               let data = await axiosService.initConversation(null, uuid, secure);
               this.conversations.push(...data);
+              console.log('-------------- inside init :'+JSON.stringify(this.conversations))
             }
             this.scrollToEnd();
+        }, async refreshDiscussion() {
+            await this.initComponent();
+            displayAllImages();
         }
    }, computed: {
         isLast() {
             return this.conversations.length - 1 ;
+        }, chatgptId() {
+           return this.chatgpt == null ? null : this.chatgpt.pk;
         }
    },watch: {
          async $route (to, from) {
              //console.log('to : '+JSON.stringify(to)+'   --- from : '+from);
-             await this.initComponent();
-             displayAllImages();
+             await this.refreshDiscussion();
           }
      },async mounted() {
          //await this.initComponent();
+         this.session = store.getters.getSession;
+         this.chatgpt = JSON.parse(store.getters.getChatgpt);
+         console.log('-------------- .................. :'+JSON.stringify(this.chatgpt))
+         //this.emitter.on("refresh-discussion-panel", await this.refreshDiscussion);
          
    }, created() {
-       this.session = store.getters.getSession;       
+       this.session = store.getters.getSession;     
+       this.chatgpt = JSON.parse(store.getters.getChatgpt);
    }, updated() {
        
     if (!this.progress) {

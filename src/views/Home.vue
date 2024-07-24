@@ -1,8 +1,9 @@
 <template>
-  <sidebar />
+  <sidebar @chat-selection="chatSelection"/>
   <main class="main">
-    <nav-bar />
-    <discussion-panel />
+    <nav-bar :chatgpt="chatgpt" @chat-selection="chatSelection"/>
+    <discussion-panel  :chatgpt="chatgpt" v-if="discussion"/>
+    <chat-selection v-else  @chatgpt-selected="chatgptSelected"  @reply-discussion="showDiscussion()"/>
   </main>
   <v-dialog
       v-model="dialog"
@@ -39,6 +40,7 @@ import DiscussionPanel from "../components/DiscussionPanel.vue";
 import NavBar from "../components/NavBar.vue";
 import Login from "../views/Login.vue";
 import Sidebar from "@/components/SideBar.vue";
+import ChatSelection from "@/components/ChatSelection.vue";
 import { i18n } from "@/services/i18nService";
 import store from "@/store";
 import axios from "axios";
@@ -49,7 +51,7 @@ const axiosService = new AxiosService();
 @Options({
 
      components: {
-         DiscussionPanel, NavBar, Login, Sidebar
+         DiscussionPanel, NavBar, Login, Sidebar, ChatSelection
      }, data: function() {
         return {
           session: null,
@@ -60,10 +62,23 @@ const axiosService = new AxiosService();
           uuid: null,
           token: null,
           error: null,
-          hasError: false
+          hasError: false,
+          discussion : true,
+          chatgpt: null
         }
      },methods: {
-        keyValue(key: string) {
+        chatSelection () {
+           this.discussion = false;
+        },showDiscussion() {
+          this.discussion = true ;
+          this.$router.go(0);
+        }, chatgptSelected(item: object) {
+          this.chatgpt = item;
+          localStorage.setItem('domain', JSON.stringify(item))
+          this.showDiscussion();
+          //this.emitter.emit("refresh-discussion-panel", item);
+
+        }, keyValue(key: string) {
           
            if (this.i18keys != null && this.i18keys[key] != null) {
              return this.i18keys[key];
@@ -76,7 +91,8 @@ const axiosService = new AxiosService();
                   let loginInfo = await axiosService.login(credentials);
                   const session = {lang: loginInfo.lang, username: this.username, token: loginInfo.access_token, uuid: await axiosService.conversationUuid(true)};
                   store.commit('setSession', session);
-                  localStorage.setItem('isis-chat-bot', JSON.stringify(session))
+                  localStorage.setItem('isis-chat-bot', JSON.stringify(session));
+                  localStorage.setItem('domain', await axiosService.defaultChat(false));
                   this.$router.push('/c/'+session.uuid)
                   //console.log('INSIDE Login ----------------')
                   //this.$emit("successLogin", session);
@@ -90,7 +106,8 @@ const axiosService = new AxiosService();
                   const session = {lang: navigator.language, username: null, token: null, uuid: await axiosService.conversationUuid(false)};
                   //console.log('Stay unconnected has selected ---- : '+JSON.stringify(session))
                   store.commit('setSession', session);
-                  localStorage.setItem('isis-chat-bot', JSON.stringify(session))
+                  localStorage.setItem('isis-chat-bot', JSON.stringify(session));
+                  localStorage.setItem('domain', await axiosService.defaultChat(false));
                   this.$router.push('/c/'+session.uuid);     
                   this.$router.go(0);             
           } 
@@ -105,18 +122,19 @@ const axiosService = new AxiosService();
             // 
           }
      },async mounted() {
-          this.i18keys = await i18n(['chatbot.login.welcome', 'chatbot.login.notice']);
+         this.i18keys = await i18n(['chatbot.login.welcome', 'chatbot.login.notice']);
+          
      }, created() {
          //this.session = store.getters.getSession;
-
+         this.chatgpt = localStorage.getItem('domain');
+        store.commit('setChatgpt', this.chatgpt);
         if (this.session == null) {
-          let localSession = localStorage.getItem('isis-chat-bot');
-
+          let localSession = localStorage.getItem('isis-chat-bot');          
           if (localSession != null) {
             this.session = JSON.parse(localSession);
             store.commit('setSession', this.session);
           }
-          
+         
         }
         this.dialog = false;
         if (this.session == null || this.session.token ==null && this.session.username != null || this.session.uuid == null) {

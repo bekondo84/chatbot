@@ -34,6 +34,22 @@ export default class AxiosService {
         }
     }
 
+    async chatList(connected: boolean) {
+         
+        if (connected == true) {
+            return (await axios.get(urlBuilder(['isis-chatbot', 'api', 'v1','domain']))).data;
+        }
+    }
+
+    async defaultChat(connected: boolean) {
+        let url = urlBuilder(['isis-chatbot', 'api', 'v1','domain', 'default']);
+
+        if (connected == false) {
+            url = urlBuilder(['isis-chatbot', 'api', 'v1','public', 'chat', 'domain']);
+        }
+        return (await axios.get(url)).data;
+    }
+
     async generalSettings() {
         const url = urlBuilder(['isis-chatbot', 'api', 'v1', 'chat', 'settings']);
         //console.log('-------------- '+url)
@@ -78,7 +94,7 @@ export default class AxiosService {
         }
         return (await axios.put(url, data)).data;
    }
-   async sendRequest(session: any, uuid: string, text: string, secure: any) {
+   async sendRequest(session: any, domain: any, uuid: string, text: string, secure: any) {
         let url = urlBuilder(['isis-chatbot', 'api', 'v1','public','chat','?']);
 
         if (secure) {
@@ -87,7 +103,7 @@ export default class AxiosService {
         if (session != null) {
             url +="/?session="+session+"&";
         }
-        url +="uuid="+uuid+"&text="+text;
+        url +="domain="+domain+"&uuid="+uuid+"&text="+text;
        // console.log("chat url : "+url);
        return (await axios.post(url)).data;
    }
