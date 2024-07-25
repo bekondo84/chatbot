@@ -2,7 +2,7 @@
   <nav class="navbar">
     <div class="page-title">
       <!-- <button class="toggle-sidebar">&#9776;</button>-->
-      <span><p>{{ chatname }} / {{ currentGPT }}</p></span>
+      <span><p>{{ chatname }} / {{ currentGPT() }}</p></span>
     </div>
     <div class="user-menu">
       <button class="model-btn"  :title="keyValue('chat.allchats')" @click="$emit('chat-selection')"><font-awesome-icon icon="fa-solid fa-snowflake" /></button>
@@ -60,13 +60,14 @@ const axiosService = new AxiosService();
              this.chatname = response.chatname;
              this.isUserLog = this.session.token != null ;
           }
+      }, currentGPT() {
+          return this.chatgpt?.code;
       }
   }, computed: {
-      currentGPT() {
-          return this.chatgpt == null ? "" : this.chatgpt.code;
-      }
+      
   }, async mounted() {
        this.session = store.getters.getSession;
+       //this.domain = localStorage.getItem('domain');
        await this.loadSettings();
        this.i18keys = await i18n(['chatbot.navbar.logout', 'chatbot.navbar.login','chat.allchats']);
    }

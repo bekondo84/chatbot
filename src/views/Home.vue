@@ -75,6 +75,7 @@ const axiosService = new AxiosService();
         }, chatgptSelected(item: object) {
           this.chatgpt = item;
           localStorage.setItem('domain', JSON.stringify(item))
+          store.commit("setChatgpt", item);
           this.showDiscussion();
           //this.emitter.emit("refresh-discussion-panel", item);
 
@@ -92,7 +93,9 @@ const axiosService = new AxiosService();
                   const session = {lang: loginInfo.lang, username: this.username, token: loginInfo.access_token, uuid: await axiosService.conversationUuid(true)};
                   store.commit('setSession', session);
                   localStorage.setItem('isis-chat-bot', JSON.stringify(session));
-                  localStorage.setItem('domain', await axiosService.defaultChat(false));
+                  let domain =  await axiosService.defaultChat(false);
+                  store.commit('setChatgpt', domain);
+                  localStorage.setItem('domain', JSON.stringify(domain));
                   this.$router.push('/c/'+session.uuid)
                   //console.log('INSIDE Login ----------------')
                   //this.$emit("successLogin", session);
@@ -107,7 +110,9 @@ const axiosService = new AxiosService();
                   //console.log('Stay unconnected has selected ---- : '+JSON.stringify(session))
                   store.commit('setSession', session);
                   localStorage.setItem('isis-chat-bot', JSON.stringify(session));
-                  localStorage.setItem('domain', await axiosService.defaultChat(false));
+                  let domain = await axiosService.defaultChat(false);
+                  store.commit('setChatgpt', domain);
+                  localStorage.setItem('domain', JSON.stringify(domain));
                   this.$router.push('/c/'+session.uuid);     
                   this.$router.go(0);             
           } 
@@ -126,8 +131,15 @@ const axiosService = new AxiosService();
           
      }, created() {
          //this.session = store.getters.getSession;
-         this.chatgpt = localStorage.getItem('domain');
-        store.commit('setChatgpt', this.chatgpt);
+         if (this.chatgpt == null) {
+           let localgpt = localStorage.getItem('domain');
+
+           if (localgpt != null) {
+             this.chatgpt = JSON.parse(localgpt);
+             store.commit('setChatgpt', this.chatgpt);
+           }            
+         }
+        
         if (this.session == null) {
           let localSession = localStorage.getItem('isis-chat-bot');          
           if (localSession != null) {

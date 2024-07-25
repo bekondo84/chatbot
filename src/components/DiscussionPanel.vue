@@ -144,7 +144,7 @@ const axiosService = new AxiosService();
               let secure: boolean = this.session.token != null ; 
               let data = await axiosService.initConversation(null, uuid, secure);
               this.conversations.push(...data);
-              console.log('-------------- inside init :'+JSON.stringify(this.conversations))
+              //console.log('-------------- inside init :'+JSON.stringify(this.conversations))
             }
             this.scrollToEnd();
         }, async refreshDiscussion() {
@@ -165,13 +165,13 @@ const axiosService = new AxiosService();
      },async mounted() {
          //await this.initComponent();
          this.session = store.getters.getSession;
-         this.chatgpt = JSON.parse(store.getters.getChatgpt);
-         console.log('-------------- .................. :'+JSON.stringify(this.chatgpt))
+         this.chatgpt = store.getters.getChatgpt;
+        // console.log('-------------- .................. :'+JSON.stringify(this.chatgpt))
          //this.emitter.on("refresh-discussion-panel", await this.refreshDiscussion);
          
    }, created() {
        this.session = store.getters.getSession;     
-       this.chatgpt = JSON.parse(store.getters.getChatgpt);
+       this.chatgpt = store.getters.getChatgpt;
    }, updated() {
        
     if (!this.progress) {
