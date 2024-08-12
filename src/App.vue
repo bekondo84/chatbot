@@ -33,7 +33,7 @@ import Home from "./views/Home.vue";
            }
        }, methods: {
           successLogin(arg: any) {
-             console.log('---------Dectected login event : '+arg);
+             //console.log('---------Dectected login event : '+arg);
              this.session = arg;
           }
        }, computed: {

@@ -7,11 +7,10 @@
   </main>
   <v-dialog
       v-model="dialog"
-      max-width="400"
+      max-width="370"
       persistent
     >
       <v-card
-        prepend-icon="mdi-map-marker"
         :text="keyValue('chatbot.login.notice')"
         :title="keyValue('chatbot.login.welcome')"
       >
@@ -79,10 +78,9 @@ const axiosService = new AxiosService();
           this.showDiscussion();
           //this.emitter.emit("refresh-discussion-panel", item);
 
-        }, keyValue(key: string) {
-          
-           if (this.i18keys != null && this.i18keys[key] != null) {
-             return this.i18keys[key];
+        }, keyValue(key: string) {          
+           if (this.i18nkeys != null && this.i18nkeys[key] != null) {
+             return this.i18nkeys[key];
            }
            return key;
         },  async login() {
@@ -115,7 +113,7 @@ const axiosService = new AxiosService();
                   localStorage.setItem('domain', JSON.stringify(domain));
                   this.$router.push('/c/'+session.uuid);     
                   this.$router.go(0);             
-          } 
+          }
      },watch: {
           $route (to, from) {
              //console.log('to : '+JSON.stringify(to)+'   --- from : '+from);
@@ -127,9 +125,9 @@ const axiosService = new AxiosService();
             // 
           }
      },async mounted() {
-         this.i18keys = await i18n(['chatbot.login.welcome', 'chatbot.login.notice']);
-          
-     }, created() {
+      let values =  await i18n(['chatbot.login.welcome', 'chatbot.login.notice']);
+      this.i18nkeys = Object.assign({}, values);          
+     },async created() {
          //this.session = store.getters.getSession;
          if (this.chatgpt == null) {
            let localgpt = localStorage.getItem('domain');
@@ -149,6 +147,7 @@ const axiosService = new AxiosService();
          
         }
         this.dialog = false;
+        console.log('--------------------'+JSON.stringify(this.session))
         if (this.session == null || this.session.token ==null && this.session.username != null || this.session.uuid == null) {
             this.dialog = true;
         } else if (this.session.token != null) {
@@ -182,7 +181,7 @@ export default class Home extends Vue {
 }
 .login-container {
   background: #fff;
-  padding: 20px 30px;
+  padding: 5px 20px 20px 20px;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   //width: 300px;
@@ -197,7 +196,7 @@ h2 {
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 label {
@@ -215,6 +214,7 @@ input[type="password"] {
   border: 1px solid #ddd;
   border-radius: 5px;
   box-sizing: border-box;
+  height: 2.1rem;
 }
 
 .checkbox-group {
@@ -268,6 +268,15 @@ button:hover {
     &:hover {
       color: var(--primary);
     }
+  }
+
+  @media (max-width: 768px) {
+        //padding-left: 6rem;
+        .login-container {
+          width: 200px;
+          height: 200px;
+        }
+    
   }
 }
 </style>

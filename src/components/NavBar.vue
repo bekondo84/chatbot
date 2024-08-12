@@ -41,9 +41,10 @@ const axiosService = new AxiosService();
             this.session.token = null;
             this.session.uuid = null;
             this.session.username= null; 
+            localStorage.removeItem('isis-chat-bot');
+            store.commit('setSession', null);
         }
-        store.commit('setSession', this.session);
-        this.$router.push('/login');
+         this.$router.push('/login');
       }, logMsg() {
          let key =  this.isUserLog ? 'chatbot.navbar.logout' : 'chatbot.navbar.login';
          return this.keyValue(key);
@@ -54,7 +55,7 @@ const axiosService = new AxiosService();
              return key;
       }, async loadSettings() {
           this.isUserLog = false ;
-          if (this.session != null && this.session.username != null) {
+          if (this.session != null) {
              let response = await axiosService.generalSettings();
              this.username = response.username ;
              this.chatname = response.chatname;

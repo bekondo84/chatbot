@@ -138,18 +138,29 @@ const axiosService = new AxiosService();
            }
            
         },async initComponent() {
-           let sessionid = null;
+            let sessionid = null;
             if (this.session != null) {
               let uuid = this.session.uuid;
               let secure: boolean = this.session.token != null ; 
-              let data = await axiosService.initConversation(null, uuid, secure);
-              this.conversations.push(...data);
+              try {
+                let data = await axiosService.initConversation(null, uuid, secure);
+                this.conversations.push(...data);
+              } catch (error : any) {
+                  let status = error.response.status;
+                 // confirm('--- '+status)
+                  if (status == 401) {
+                    this.$router.push('/login');
+                  } else {
+                    throw error ;
+                  }
+              }
+              
               //console.log('-------------- inside init :'+JSON.stringify(this.conversations))
-            }
+            }  
             this.scrollToEnd();
         }, async refreshDiscussion() {
-            await this.initComponent();
-            displayAllImages();
+              await this.initComponent();
+              displayAllImages();                  
         }
    }, computed: {
         isLast() {
@@ -160,7 +171,7 @@ const axiosService = new AxiosService();
    },watch: {
          async $route (to, from) {
              //console.log('to : '+JSON.stringify(to)+'   --- from : '+from);
-             await this.refreshDiscussion();
+             await this.refreshDiscussion();             
           }
      },async mounted() {
          //await this.initComponent();

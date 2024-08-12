@@ -1,5 +1,6 @@
 import store from "@/store";
 import axios from "axios";
+import router from "@/router";
 
 const loginUrl = baseUrl()+"/backoffice/api/v1/public/authenticate";
 const apiUrl="/api/v1/";
@@ -51,7 +52,7 @@ export default class AxiosService {
     }
 
     async generalSettings() {
-        const url = urlBuilder(['isis-chatbot', 'api', 'v1', 'chat', 'settings']);
+        const url = urlBuilder(['isis-chatbot', 'api', 'v1','public', 'chat', 'settings']);
         //console.log('-------------- '+url)
         return (await axios.get(url)).data;
         //return response ;
@@ -59,7 +60,12 @@ export default class AxiosService {
 
    async userSessions() {
          const url = urlBuilder(['isis-chatbot', 'api', 'v1', 'session']);
-         return (await axios.get(url)).data;
+         try {
+            return (await axios.get(url)).data;
+         } catch (error) {
+            return [];  
+         }
+         
    }
 
    async createSession(value: string) {
@@ -83,7 +89,12 @@ export default class AxiosService {
             url +="/?session="+session+"&";
         }
         url +="uuid="+uuid;
-        return (await axios.get(url)).data;
+        try {
+            return (await axios.get(url)).data; 
+        } catch (error) {
+            throw error;
+        }
+             
    }
 
    async review(data: any, secure: any) {

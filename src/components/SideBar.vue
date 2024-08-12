@@ -107,11 +107,14 @@ const toggleMenu = () => {
          },async refreshSessionList() {
              let session = store.getters.getSession;
              this.desable_session_btn = true;
+             //console.log('----------SideBar.refreshSessionList() : '+JSON.stringify(session))
              if (session != null && session.token != null) {
               let response = await axiosService.userSessions();
               this.sessions.splice(0, this.sessions.length);
               this.sessions.push(...response);
               this.desable_session_btn = false;
+             } else if (session != null && session.uuid == null) {
+               this.$router.push('/login');
              }   
          }, async deleteSession(pk: number) {
              let message = await this.keyValue('chatSession.delete.warning');
